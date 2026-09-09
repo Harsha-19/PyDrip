@@ -214,7 +214,9 @@ PyDrip leverages a local pretrained `sentence-transformers` model (`all-MiniLM-L
 1. For `MODIFIED` text files, `old_content` is loaded from the immutable baseline snapshot and `new_content` is read from disk.
 2. Both texts are mapped to 384-dimensional normalized vector embeddings.
 3. Cosine similarity is computed and inverted into a bounded drift score:
-   $$\text{drift\_score} = \text{clip}(1.0 - \mathbf{u} \cdot \mathbf{v}, 0.0, 1.0)$$
+   ```text
+   drift_score = clip(1.0 - (u · v), 0.0, 1.0)
+   ```
 4. A score near `0.0` indicates semantically equivalent content (e.g., reformatting, comments), while higher scores (`> 0.25`) indicate structural policy or configuration logic replacements.
 5. Binary files, newly added files, and deleted files safely bypass embedding and cleanly yield `drift_score = None`.
 
@@ -258,7 +260,11 @@ Quantifies the historical frequency of similar file modifications using logarith
 
 ### 5. Incident Risk Score
 Security incidents rarely involve a single isolated file. PyDrip aggregates multiple file-level signals into a unified incident risk metric (0.0 to 1.0):
-$$\text{Incident Risk} = 0.30(\text{Max Anomaly}) + 0.20(\text{Max Drift}) + 0.20(\text{Severity Factor}) + 0.15(\text{Novelty}) + 0.10(\text{File Volume}) + 0.05(\text{Recurrence})$$
+
+```text
+Incident Risk = 0.30(Max Anomaly) + 0.20(Max Drift) + 0.20(Severity Factor)
+              + 0.15(Novelty) + 0.10(File Volume) + 0.05(Recurrence)
+```
 
 ### 6. Real-Time Security State & Alerts
 Aggregated incident risk drives the global system security posture:
@@ -472,7 +478,7 @@ Follow this 10-step sequence to demonstrate the complete PyDrip pipeline:
 1. **Initialize Baseline:** Send `POST /baseline` to index sample files, compute initial SHA-256 hashes, and store immutable text snapshots in `.fim_snapshots/`.
 2. **Inspect Clean State:** Verify in the dashboard that the monitored environment shows zero detected changes and security state is `NORMAL`.
 3. **Simulate a Benign Edit:** Add a comment or format whitespace in a Low-criticality script (`sample.py`).
-4. **Trigger Scan:** Send `POST /scan`. PyDrip identifies the hash difference, calculates near-zero semantic drift ($\le 0.01$), and marks severity as `LOW`.
+4. **Trigger Scan:** Send `POST /scan`. PyDrip identifies the hash difference, calculates near-zero semantic drift (`≤ 0.01`), and marks severity as `LOW`.
 5. **Simulate an Off-Hours Configuration Tamper:** Modify a Critical asset (`database.conf`), altering credentials or port configurations.
 6. **Trigger Real-Time Detection:** The background Watchdog observer intercepts the file modification event immediately.
 7. **Evaluate Semantic Drift:** PyDrip compares current content against the baseline snapshot, registering high semantic drift (`> 0.25`).
