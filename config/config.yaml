@@ -1,0 +1,10 @@
+monitored_paths:
+- path: ./sample_data
+  criticality: Medium
+criticality_rules:
+  extensions:
+    .env: Critical
+    .conf: High
+    .cfg: High
+    .py: Medium
+    .txt: Low
