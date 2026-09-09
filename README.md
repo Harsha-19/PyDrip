@@ -109,7 +109,7 @@ PyDrip:
 flowchart TD
     subgraph Filesystem ["1. Filesystem Layer"]
         Files["Monitored Target Files"]
-        Snapshots[".fim_snapshots/&lt;sha256&gt;.txt"]
+        Snapshots[".fim_snapshots/sha256.txt"]
     end
 
     subgraph CoreFIM ["2. Core FIM Engine (Harsha)"]
@@ -123,7 +123,7 @@ flowchart TD
     subgraph Adapter ["3. Integration Adapter Layer"]
         AdapterMod["ai_scoring/adapter.py"]
         HistBuilder["Walk-Forward History Builder"]
-        PayloadPrep["Content &amp; Payload Extractor"]
+        PayloadPrep["Content and Payload Extractor"]
     end
 
     subgraph AIScoring ["4. AI/ML Scoring Layer (Rohith)"]
@@ -142,28 +142,28 @@ flowchart TD
         SecurityState["Real-Time Security Alerts"]
     end
 
-    subgraph Presentation ["6. Presentation &amp; Platform (Paritosh &amp; Harsha)"]
+    subgraph Presentation ["6. Presentation and Platform"]
         FastAPI["FastAPI REST Backend"]
         Dashboard["Streamlit Security Dashboard"]
         Reports["Investigation Reports"]
     end
 
-    Files -->|Filesystem Events| Watchdog
-    Files -->|Read File Bytes| Hasher
+    Files -->|"Filesystem Events"| Watchdog
+    Files -->|"Read File Bytes"| Hasher
     Watchdog --> Scanner
     Baseline --> Hasher
     Hasher --> Scanner
-    Baseline -.->|Snapshot Text &lt; 1MB| Snapshots
-    Scanner -->|Raw Changes| SQLite
+    Baseline -.->|"Snapshot Text under 1MB"| Snapshots
+    Scanner -->|"Raw Changes"| SQLite
 
-    SQLite -->|Raw Change Records| AdapterMod
-    Snapshots -->|old_content| PayloadPrep
-    Files -->|new_content| PayloadPrep
-    SQLite -->|Prior Scans (detected_at before current)| HistBuilder
+    SQLite -->|"Raw Change Records"| AdapterMod
+    Snapshots -->|"old_content"| PayloadPrep
+    Files -->|"new_content"| PayloadPrep
+    SQLite -->|"Historical Baseline Scans"| HistBuilder
 
     HistBuilder --> AdapterMod
     PayloadPrep --> AdapterMod
-    AdapterMod -->|score_changes| Features
+    AdapterMod -->|"score_changes"| Features
 
     Features --> IsoForest
     PayloadPrep --> MiniLM
@@ -178,7 +178,7 @@ flowchart TD
     Recurrence --> IncidentRisk
     IncidentRisk --> SecurityState
 
-    SecurityState -->|Persist Enriched Scores| SQLite
+    SecurityState -->|"Persist Enriched Scores"| SQLite
     SQLite --> FastAPI
     FastAPI --> Dashboard
     FastAPI --> Reports
