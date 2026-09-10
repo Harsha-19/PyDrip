@@ -39,6 +39,7 @@ def run_scan(
     db_path: Optional[Path] = None,
     base_dir: Optional[Path] = None,
     baseline_scan_id: Optional[str] = None,
+    auto_enrich: Optional[bool] = None,
 ) -> ScanSummaryResponse:
     """Execute filesystem scan and diff against the latest baseline.
 
@@ -214,6 +215,21 @@ def run_scan(
     # 4. Persist changes to database if any were detected
     if change_records:
         insert_change_records(change_records, db_path=db_path)
+        # Post-scan AI enrichment (strict failure isolation)
+        should_enrich = auto_enrich if auto_enrich is not None else (os.environ.get("FIM_AUTO_ENRICH", "0") == "1")
+        if should_enrich:
+            try:
+                from ai_scoring.adapter import enrich_scan
+                resolved_db = Path(db_path) if db_path else (project_root / "data" / "fim.db")
+                snapshot_dir = project_root / ".fim_snapshots"
+                enrich_scan(
+                    scan_id=scan_id,
+                    db_path=resolved_db,
+                    project_root=project_root,
+                    snapshot_dir=snapshot_dir
+                )
+            except Exception:
+                pass
 
     # 5. Append audit log entry
     append_audit_log(

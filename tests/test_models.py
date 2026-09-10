@@ -65,6 +65,7 @@ def test_change_contract_valid_null_scoring():
         "drift_score": None,
         "severity": None,
         "detected_at": "2026-09-09T15:00:00Z",
+        "evidence": None,
     }
 
 

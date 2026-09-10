@@ -81,17 +81,21 @@ def initialize_database(db_path: Optional[Path] = None) -> None:
                 drift_score REAL,
                 anomaly_score REAL,
                 severity TEXT,
-                detected_at TEXT NOT NULL
+                detected_at TEXT NOT NULL,
+                evidence TEXT
             );
             """
         )
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_changes_scan_id ON changes (scan_id);")
 
-        # Ensure criticality column exists in changes table if table was created in earlier phase
+        # Ensure criticality and evidence columns exist in changes table if table was created in earlier phase
         cursor.execute("PRAGMA table_info(changes);")
         columns = [col["name"] for col in cursor.fetchall()]
         if "criticality" not in columns:
             cursor.execute("ALTER TABLE changes ADD COLUMN criticality TEXT NOT NULL DEFAULT 'Medium';")
+        if "evidence" not in columns:
+            cursor.execute("ALTER TABLE changes ADD COLUMN evidence TEXT;")
+
 
         # 3. audit_log table (append-only)
         cursor.execute(
@@ -196,10 +200,16 @@ def insert_change_records(
     if not changes:
         return
 
-    # Ensure criticality default is populated if omitted from dict
+    # Ensure all bound parameter keys have safe default values if omitted
     normalized_changes = [
         {
+            "old_hash": None,
+            "new_hash": None,
             "criticality": "Medium",
+            "drift_score": None,
+            "anomaly_score": None,
+            "severity": None,
+            "evidence": None,
             **change,
         }
         for change in changes
@@ -208,14 +218,15 @@ def insert_change_records(
     query = """
         INSERT INTO changes (
             scan_id, file_path, change_type, old_hash, new_hash, criticality,
-            drift_score, anomaly_score, severity, detected_at
+            drift_score, anomaly_score, severity, detected_at, evidence
         ) VALUES (
             :scan_id, :file_path, :change_type, :old_hash, :new_hash, :criticality,
-            :drift_score, :anomaly_score, :severity, :detected_at
+            :drift_score, :anomaly_score, :severity, :detected_at, :evidence
         );
     """
     with get_db_connection(db_path) as conn:
         conn.executemany(query, normalized_changes)
+
 
 
 def get_changes_by_scan_id(
@@ -225,14 +236,24 @@ def get_changes_by_scan_id(
     """Retrieve changes for a given scan_id matching the fields of the shared JSON contract."""
     query = """
         SELECT scan_id, file_path, change_type, old_hash, new_hash, criticality,
-               drift_score, anomaly_score, severity, detected_at
+               drift_score, anomaly_score, severity, detected_at, evidence
         FROM changes
         WHERE scan_id = ?
         ORDER BY id ASC;
     """
     with get_db_connection(db_path) as conn:
         cursor = conn.execute(query, (scan_id,))
-        return [dict(row) for row in cursor.fetchall()]
+        rows = []
+        for r in cursor.fetchall():
+            d = dict(r)
+            if d.get("evidence") and isinstance(d["evidence"], str):
+                import json
+                try:
+                    d["evidence"] = json.loads(d["evidence"])
+                except Exception:
+                    pass
+            rows.append(d)
+        return rows
 
 
 # ==============================================================================

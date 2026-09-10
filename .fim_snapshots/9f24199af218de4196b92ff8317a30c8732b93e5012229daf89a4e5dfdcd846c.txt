@@ -1,0 +1,1 @@
+AUTH_SECRET=jwt_signing_key_456

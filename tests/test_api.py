@@ -23,7 +23,7 @@ client = TestClient(app)
 
 
 @pytest.fixture(autouse=True)
-def preserve_config_and_db_state(tmp_path: Path):
+def preserve_config_and_db_state():
     """Ensure original configuration is preserved and test workspace is clean."""
     original_config = load_config()
     yield
@@ -81,23 +81,27 @@ def test_get_config():
 def test_put_config_valid(sample_api_workspace):
     """Test 3: PUT /config updates config and writes exactly one CONFIG_UPDATE audit event."""
     initial_audit_len = len(get_audit_history())
+    orig_cfg = load_config()
 
     new_cfg = {
         "monitored_paths": [{"path": str(sample_api_workspace["sample_dir"]), "criticality": "High"}],
         "criticality_rules": {"extensions": {".env": "Critical"}}
     }
 
-    put_resp = client.put("/config", json=new_cfg)
-    assert put_resp.status_code == 200
-    assert put_resp.json() == new_cfg
+    try:
+        put_resp = client.put("/config", json=new_cfg)
+        assert put_resp.status_code == 200
+        assert put_resp.json() == new_cfg
 
-    get_resp = client.get("/config")
-    assert get_resp.status_code == 200
-    assert get_resp.json() == new_cfg
+        get_resp = client.get("/config")
+        assert get_resp.status_code == 200
+        assert get_resp.json() == new_cfg
 
-    audit_history = get_audit_history()
-    assert len(audit_history) == initial_audit_len + 1
-    assert audit_history[-1]["action"] == "CONFIG_UPDATE"
+        audit_history = get_audit_history()
+        assert len(audit_history) == initial_audit_len + 1
+        assert audit_history[-1]["action"] == "CONFIG_UPDATE"
+    finally:
+        save_config(orig_cfg)
 
 
 def test_put_config_invalid():
@@ -251,3 +255,66 @@ def test_get_changes_unknown_scan_id_returns_empty_list():
     resp = client.get("/changes/scan-nonexistent-999")
     assert resp.status_code == 200
     assert resp.json() == []
+
+
+def test_get_changes_evidence_public_contract_regression(sample_api_workspace):
+    """Test 13: Regression test verifying that post-scoring evidence returned by GET /changes/{scan_id}
+    and persisted in SQLite contains EXACTLY the 3 public contract keys:
+    - anomaly_reason
+    - criticality_weight
+    - drift_reason
+    and contains NO occurrences of criticality_reason or severity_reason.
+    """
+    ws = sample_api_workspace
+    import sqlite3
+    import json
+    from ai_scoring.adapter import enrich_scan
+
+    # 1. Baseline
+    base_resp = client.post("/baseline")
+    assert base_resp.status_code == 200
+
+    # 2. Modify file
+    (ws["sample_dir"] / "app.py").write_text("print('hello modified api')", encoding="utf-8")
+
+    # 3. Scan & Enrich
+    scan_resp = client.post("/scan")
+    assert scan_resp.status_code == 200
+    scan_id = scan_resp.json()["scan_id"]
+
+    # Enrich scan using authoritative scoring adapter
+    enrich_scan(scan_id=scan_id, db_path=DEFAULT_DB_PATH, project_root=Path("."))
+
+    # 4. HTTP API verification
+    changes_resp = client.get(f"/changes/{scan_id}")
+    assert changes_resp.status_code == 200
+    changes = changes_resp.json()
+    assert len(changes) == 1
+
+    http_evidence = changes[0]["evidence"]
+    assert isinstance(http_evidence, dict)
+    assert sorted(http_evidence.keys()) == [
+        "anomaly_reason",
+        "criticality_weight",
+        "drift_reason",
+    ]
+    assert "criticality_reason" not in http_evidence
+    assert "severity_reason" not in http_evidence
+
+    # 5. SQLite Direct query verification
+    conn = sqlite3.connect(str(DEFAULT_DB_PATH))
+    conn.row_factory = sqlite3.Row
+    row = conn.execute("SELECT evidence FROM changes WHERE scan_id = ?;", (scan_id,)).fetchone()
+    conn.close()
+
+    assert row is not None
+    assert row["evidence"] is not None
+    db_evidence = json.loads(row["evidence"])
+    assert isinstance(db_evidence, dict)
+    assert sorted(db_evidence.keys()) == [
+        "anomaly_reason",
+        "criticality_weight",
+        "drift_reason",
+    ]
+    assert "criticality_reason" not in db_evidence
+    assert "severity_reason" not in db_evidence

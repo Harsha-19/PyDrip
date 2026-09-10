@@ -139,6 +139,14 @@ def create_baseline(
                 except ValueError:
                     stored_path = str(file_path).replace("\\", "/")
 
+                # Content-addressable immutable text snapshot for semantic drift analysis
+                try:
+                    from ai_scoring.adapter import take_text_snapshot
+                    snapshot_dir = project_root / ".fim_snapshots"
+                    take_text_snapshot(file_path, sha256_hash, snapshot_dir)
+                except Exception:
+                    pass
+
                 baseline_records.append({
                     "scan_id": scan_id,
                     "file_path": stored_path,

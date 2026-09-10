@@ -1,7 +1,7 @@
 """Core integrity engine models, enums, constants, and shared contracts for FIM+."""
 
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -58,6 +58,7 @@ class ChangeContract(BaseModel):
     drift_score: Optional[float] = None
     severity: Optional[Severity] = None
     detected_at: str
+    evidence: Optional[Any] = None
 
 
 # --- CONFIGURATION MODELS ---

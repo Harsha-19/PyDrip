@@ -145,6 +145,7 @@ def test_failed_scan_does_not_create_audit_event(audit_workspace):
 
 def test_put_config_auditing_and_validation_rejection():
     """Test 4 & 5: Verify valid PUT /config appends CONFIG_UPDATE, while invalid rejects without logging."""
+    orig_cfg = load_config()
     # 1. Invalid payload rejected by Pydantic validation -> HTTP 422
     initial_history_len = len(get_audit_history())
     invalid_payload = {
@@ -160,14 +161,17 @@ def test_put_config_auditing_and_validation_rejection():
         "monitored_paths": [{"path": "./sample_data", "criticality": "High"}],
         "criticality_rules": {"extensions": {".env": "Critical"}}
     }
-    resp2 = client.put("/config", json=valid_payload)
-    assert resp2.status_code == 200
+    try:
+        resp2 = client.put("/config", json=valid_payload)
+        assert resp2.status_code == 200
 
-    updated_history = get_audit_history()
-    assert len(updated_history) == initial_history_len + 1
-    last_event = updated_history[-1]
-    assert last_event["action"] == "CONFIG_UPDATE"
-    assert "Monitored paths: 1" in last_event["details"]
+        updated_history = get_audit_history()
+        assert len(updated_history) == initial_history_len + 1
+        last_event = updated_history[-1]
+        assert last_event["action"] == "CONFIG_UPDATE"
+        assert "Monitored paths: 1" in last_event["details"]
+    finally:
+        save_config(orig_cfg)
 
 
 def test_audit_log_append_only_and_ordering(audit_workspace):
