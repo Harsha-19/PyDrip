@@ -23,5 +23,5 @@ data/test_*.db
 .idea/
 .DS_Store
 Thumbs.db
-.sample_data\.env
+sample_data/.env
 .env
