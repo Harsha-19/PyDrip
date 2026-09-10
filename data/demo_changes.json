@@ -1,0 +1,126 @@
+{
+  "benign": [
+    {
+      "file_path": "/configs/nginx.conf",
+      "change_type": "MODIFIED",
+      "criticality": "Low",
+      "old_hash": "3a26c9a07c687a906ebf9ee8950395d162e823d49380e3854bdf8b2bb3f950c6",
+      "new_hash": "941240a6a1b7a2309b6dec8dfc5f219c9d526edad6110bf191da2e4f29bc84cd",
+      "old_content": "timeout=30\n",
+      "new_content": "timeout=35\n",
+      "detected_at": "2026-09-09T10:00:00"
+    }
+  ],
+  "formatting_only": [
+    {
+      "file_path": "/configs/database.conf",
+      "change_type": "MODIFIED",
+      "criticality": "Medium",
+      "old_hash": "b1cccba1f241491a57ad3c69d186dee32f8a0def40c448eeadf83bc22a68c4ce",
+      "new_hash": "a619e94f763fc094cf75d85eb0615bfffc848e4f3759185ae394deba7cbe8658",
+      "old_content": "DB_HOST=localhost\nDB_PORT=5432\n",
+      "new_content": "DB_HOST = localhost\nDB_PORT = 5432\n",
+      "detected_at": "2026-09-09T10:05:00"
+    }
+  ],
+  "meaningful_change": [
+    {
+      "file_path": "/configs/auth.conf",
+      "change_type": "MODIFIED",
+      "criticality": "High",
+      "old_hash": "2bf3b1f7ac7f2f67b42eeb064de2be9b821ef28f670385b4a6079b1268aaa08a",
+      "new_hash": "15b3aeb9250e72d85c80271aa20e20fcb185f221b04bbc6a73d2cf1c70c909e5",
+      "old_content": "ALLOW_LOGIN=true\n",
+      "new_content": "ALLOW_LOGIN=false\n",
+      "detected_at": "2026-09-09T10:10:00"
+    }
+  ],
+  "suspicious_bulk": [
+    {
+      "file_path": "/configs/app.conf",
+      "change_type": "MODIFIED",
+      "criticality": "High",
+      "old_hash": "a5e99fbf537ba949df6ecc589598267726d4f3368197aedddce7fdc1776a7678",
+      "new_hash": "e615bc81c5e34ae13b9d083cc1520a45816f70241753568cd55af0c869a4f784",
+      "old_content": "old_app",
+      "new_content": "new_app",
+      "detected_at": "2026-09-09T02:00:00"
+    },
+    {
+      "file_path": "/configs/database.conf",
+      "change_type": "MODIFIED",
+      "criticality": "Critical",
+      "old_hash": "21e0f732fece3c2fd17c94dea99b5c60b2b2031ecd46e342121f535610d82ee5",
+      "new_hash": "865c354930bab5e981bb061b645157c05dda376a1fc4b3a1f4a80b3e75723704",
+      "old_content": "old_database",
+      "new_content": "new_database",
+      "detected_at": "2026-09-09T02:01:00"
+    },
+    {
+      "file_path": "/configs/auth.conf",
+      "change_type": "MODIFIED",
+      "criticality": "Critical",
+      "old_hash": "69844c0f9e5db37166a556622bd3c43d1a68cfdfaefdc3347854626793ab988d",
+      "new_hash": "6350613614ffbe5f0bb7aceb475e37db34d05c850e8f6546b3494f5777274bbf",
+      "old_content": "old_auth",
+      "new_content": "new_auth",
+      "detected_at": "2026-09-09T02:02:00"
+    },
+    {
+      "file_path": "/configs/security.conf",
+      "change_type": "MODIFIED",
+      "criticality": "High",
+      "old_hash": "f86b7e987ea5a54cff1fb477846ed5b392cf13053175569734c3a0947982740d",
+      "new_hash": "6d0ea374b02329b78b55ecc08d82d506b300078259ef0c74dd07dd2ffdb52900",
+      "old_content": "old_security",
+      "new_content": "new_security",
+      "detected_at": "2026-09-09T02:03:00"
+    },
+    {
+      "file_path": "/configs/nginx.conf",
+      "change_type": "MODIFIED",
+      "criticality": "High",
+      "old_hash": "a160d7068bd3625eb70ca3beff05097e323946461d96c057831cb7c7744d3938",
+      "new_hash": "13b206208396395359f475e6462ed421ebb5aa04afd1f2142979aa58cb11d337",
+      "old_content": "old_nginx",
+      "new_content": "new_nginx",
+      "detected_at": "2026-09-09T02:04:00"
+    }
+  ],
+  "added_file": [
+    {
+      "file_path": "/scripts/malware.sh",
+      "change_type": "ADDED",
+      "criticality": "High",
+      "old_hash": null,
+      "new_hash": "93577c540ba73e62c2e44f761d3f9480137a8bf56454e5d2abd40a771f668cd6",
+      "old_content": null,
+      "new_content": "echo 'owned'",
+      "detected_at": "2026-09-09T10:20:00"
+    }
+  ],
+  "deleted_file": [
+    {
+      "file_path": "/configs/backup.conf",
+      "change_type": "DELETED",
+      "criticality": "Medium",
+      "old_hash": "5cf5777e2fdef9a74505865f6ef4cc58e7d0dec0c0ff153dfff19b541b76f1ed",
+      "new_hash": null,
+      "old_content": "backup_enabled=true",
+      "new_content": null,
+      "detected_at": "2026-09-09T10:25:00"
+    }
+  ],
+  "binary_modified": [
+    {
+      "file_path": "/bin/app",
+      "change_type": "MODIFIED",
+      "criticality": "Critical",
+      "old_hash": "3a16a24f93e8f442d412dcfb804e106e0cd49a75fc215ac713931de7027e5eec",
+      "new_hash": "7f7b494ade6bf6fd10b9bc3ceea10acdd9486fd3044e29b78be02c0e572b4a53",
+      "old_content": null,
+      "new_content": null,
+      "detected_at": "2026-09-09T10:30:00"
+    }
+  ]
+}

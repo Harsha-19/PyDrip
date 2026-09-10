@@ -1,0 +1,2 @@
+# Service 3 worker logic
+def run(): return 3
